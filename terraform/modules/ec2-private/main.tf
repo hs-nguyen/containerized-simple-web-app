@@ -6,7 +6,7 @@ resource "aws_instance" "ansible" {
   security_groups = [var.security_group_id]
 
   tags = {
-    Name = "ansible-host1"
+    Name = "ansible-host"
     Environment = "dev"
   }
 }
