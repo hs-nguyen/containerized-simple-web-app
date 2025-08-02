@@ -1,0 +1,10 @@
+﻿version: '3.8'
+services:
+  web:
+    build:
+      context: web
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=development
