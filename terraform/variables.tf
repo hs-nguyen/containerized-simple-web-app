@@ -33,3 +33,16 @@ variable "aws_key_pair_aws-singapore-keypair" {
   description = "ID of the bastion key pair"
   type        = string
 }
+# Variable for the application load balancer
+# variable "alb_sg_id" {
+#   description = "Security group ID for the ALB"
+#   type        = list(string)
+# }
+# variable "target_group_arn" {
+#   description = "ARN of the target group for the ALB"
+#   type        = string
+# }
+# variable "vpc_id" {
+#   description = "ID of the VPC where ALB will be created"
+#   type        = string
+# }

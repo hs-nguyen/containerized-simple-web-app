@@ -8,6 +8,7 @@ resource "aws_instance" "ansible" {
   tags = {
     Name = "ansible-host"
     Environment = "dev"
+    description = "Ansible host for managing other instances"
   }
 }
 resource "aws_instance" "monitoring-sv" {
@@ -18,7 +19,8 @@ resource "aws_instance" "monitoring-sv" {
   security_groups = [var.security_group_id]
 
   tags = {
-    Name = "monitoring-sv"
+    Name = "prometheus-grafana"
     Environment = "dev"
+    description = "Install prometheus and grafana"
   }
 }
