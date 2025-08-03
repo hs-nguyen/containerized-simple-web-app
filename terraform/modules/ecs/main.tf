@@ -15,10 +15,25 @@ resource "null_resource" "docker_build_push" {
     working_dir = "${path.root}/../web"
     command = <<-EOT
       set -e
-      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${aws_ecr_repository.simple-web-app}
+      echo "Starting Docker build and push process..."
+      
+      # Login to ECR
+      echo "Logging into ECR repository..."
+      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${aws_ecr_repository.simple-web-app.repository_url}
+      
+      # Build Docker image
+      echo "Building Docker image..."
       docker build -t simple-web-app:latest .
-      docker tag simple-web-app:latest ${aws_ecr_repository.simple-web-app}:latest
-      docker push ${aws_ecr_repository.simple-web-app}:latest
+      
+      # Tag image for ECR
+      echo "Tagging image for ECR..."
+      docker tag simple-web-app:latest ${aws_ecr_repository.simple-web-app.repository_url}:latest
+      
+      # Push image to ECR
+      echo "Pushing image to ECR..."
+      docker push ${aws_ecr_repository.simple-web-app.repository_url}:latest
+      
+      echo "Docker build and push completed successfully!"
     EOT
     
     on_failure = fail
@@ -26,6 +41,7 @@ resource "null_resource" "docker_build_push" {
 
   triggers = {
     dockerfile_hash = filemd5("${path.root}/../web/Dockerfile")
+    ecr_repo_url = aws_ecr_repository.simple-web-app.repository_url
   }
 }
 # Create CloudWatch Log Group

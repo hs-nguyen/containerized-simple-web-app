@@ -45,6 +45,24 @@ module "ec2-private" {
     subnet_id = module.vpc.private_subnets[1]
     depends_on = [ module.security, module.vpc] 
 }
+module "route53" {
+    source = "./modules/route53"
+    domain_name = var.domain_name
+    create_hosted_zone = var.create_hosted_zone
+    alb_dns_name = module.alb.alb_dns_name
+    alb_zone_id = module.alb.alb_zone_id
+    environment = var.environment
+    depends_on = [module.alb]
+}
+
+module "acm" {
+    count = var.domain_name != null ? 1 : 0
+    source = "./modules/acm"
+    domain_name = var.domain_name
+    hosted_zone_id = module.route53.hosted_zone_id
+    environment = var.environment
+    depends_on = [module.route53]
+}
 module "alb" {
     source = "./modules/alb"
     vpc_id = module.vpc.vpc_id
@@ -52,7 +70,7 @@ module "alb" {
     public_subnets = module.vpc.public_subnets
     alb_sg_id = module.security.alb_sg_id
     target_group_arn = module.alb.target_group_arn
-    depends_on = [ module.security, module.vpc]
+    depends_on = [ module.security, module.vpc ]
 }
 module "ecs" {
     source = "./modules/ecs"
@@ -62,26 +80,4 @@ module "ecs" {
     security_group_id = module.security.ecs_security_group_id
     aws_region = var.aws_region
     depends_on = [ module.security, module.vpc, module.alb ]
-}
-
-# Build and push Docker image after ECR is created
-resource "null_resource" "docker_build_push" {
-  depends_on = [module.ecs]
-
-  provisioner "local-exec" {
-    working_dir = "${path.root}/../web"
-    command = <<-EOT
-      set -e
-      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${module.ecs.ecr_repository_url}
-      docker build -t simple-web-app:latest .
-      docker tag simple-web-app:latest ${module.ecs.ecr_repository_url}:latest
-      docker push ${module.ecs.ecr_repository_url}:latest
-    EOT
-    
-    on_failure = fail
-  }
-
-  triggers = {
-    dockerfile_hash = filemd5("${path.root}/../web/Dockerfile")
-  }
 }

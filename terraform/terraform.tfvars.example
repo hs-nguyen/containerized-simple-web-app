@@ -21,3 +21,7 @@ key_pair_name = "your-key-pair-name"  # Update with your key pair name
 
 # Security Configuration
 allowed_ssh_cidr = "YOUR_IP/32"  # Replace with your IP address for SSH access
+
+# Domain Configuration (optional)
+# domain_name = "example.com"  # Uncomment and set your domain name
+# create_hosted_zone = true    # Set to true if you want to create a new hosted zone

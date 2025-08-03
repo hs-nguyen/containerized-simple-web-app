@@ -34,3 +34,21 @@ variable "allowed_ssh_cidr" {
   description = "CIDR block allowed for SSH access to bastion host"
   type        = string
 }
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "dev"
+}
+
+variable "domain_name" {
+  description = "Domain name for the application (optional)"
+  type        = string
+  default     = null
+}
+
+variable "create_hosted_zone" {
+  description = "Whether to create a new Route53 hosted zone"
+  type        = bool
+  default     = false
+}

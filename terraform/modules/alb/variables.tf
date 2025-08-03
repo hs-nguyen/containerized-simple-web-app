@@ -21,3 +21,9 @@ variable "target_group_arn" {
   description = "ARN of the target group"
   type        = string
 }
+
+variable "certificate_arn" {
+  description = "ARN of the SSL certificate"
+  type        = string
+  default     = null
+}

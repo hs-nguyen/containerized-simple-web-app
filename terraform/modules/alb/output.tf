@@ -13,6 +13,15 @@ output "target_group_arn" {
 }
 
 output "aws_lb_listener_arn" {
-  description = "ARN of the ALB Listener"
-  value       = aws_lb_listener.simple-web-app-listener.arn
+  description = "ARN of the ALB HTTP Listener"
+  value       = aws_lb_listener.http_listener.arn
+}
+
+output "aws_lb_https_listener_arn" {
+  description = "ARN of the ALB HTTPS Listener"
+  value       = var.certificate_arn != null ? aws_lb_listener.https_listener[0].arn : null
+}
+output "alb_zone_id" {
+  description = "Zone ID of the Application Load Balancer"
+  value       = aws_lb.simple-web-app-alb.zone_id
 }
