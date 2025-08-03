@@ -9,7 +9,8 @@ resource "aws_security_group" "bastion-host-sg" {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = [var.allowed_ssh_cidr]
+        description = "SSH access from allowed IP ranges"
 }
     egress {
         from_port   = 0

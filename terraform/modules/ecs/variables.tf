@@ -17,3 +17,27 @@ variable "security_group_id" {
   description = "ID of the security group to associate with the ALB"
   type        = string
 }
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "ap-southeast-1"
+}
+
+variable "task_cpu" {
+  description = "CPU units for the ECS task"
+  type        = string
+  default     = "1024"
+}
+
+variable "task_memory" {
+  description = "Memory for the ECS task"
+  type        = string
+  default     = "3072"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "dev"
+}

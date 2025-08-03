@@ -1,26 +1,34 @@
-resource "aws_instance" "ansible" {
-  ami           = var.ami
-  instance_type = var.instance_type
-  key_name = var.aws_key_pair_bastion_key_id
-  subnet_id     = var.subnet_id
-  security_groups = [var.security_group_id]
-
-  tags = {
-    Name = "ansible-host"
-    Environment = "dev"
-    description = "Ansible host for managing other instances"
+locals {
+  instances = {
+    ansible = {
+      name = "ansible-host"
+      description = "Ansible host for managing other instances"
+    }
+    monitoring = {
+      name = "prometheus-grafana"
+      description = "Install prometheus and grafana"
+    }
   }
 }
-resource "aws_instance" "monitoring-sv" {
+
+resource "aws_instance" "private_instances" {
+  for_each = local.instances
+  
   ami           = var.ami
   instance_type = var.instance_type
   key_name = var.aws_key_pair_bastion_key_id
   subnet_id     = var.subnet_id
-  security_groups = [var.security_group_id]
+  vpc_security_group_ids = [var.security_group_id]
+  monitoring = true
+
+  root_block_device {
+    encrypted = true
+    volume_type = "gp3"
+    volume_size = 20
+  }
 
   tags = {
-    Name = "prometheus-grafana"
-    Environment = "dev"
-    description = "Install prometheus and grafana"
+    Name = each.value.name
+    Description = each.value.description
   }
 }

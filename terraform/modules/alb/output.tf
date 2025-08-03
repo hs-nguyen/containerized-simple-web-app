@@ -9,7 +9,7 @@ output "alb_arn" {
 
 output "target_group_arn" {
   description = "ARN of the Target Group"
-  value       = aws_lb_target_group.simle-web-app-tg.arn
+  value       = aws_lb_target_group.simple-web-app-tg.arn
 }
 
 output "aws_lb_listener_arn" {
