@@ -205,7 +205,7 @@ resource "aws_ecs_service" "simple-web-app-service" {
   name            = "simple-web-app-service"
   cluster         = aws_ecs_cluster.simple-web-app-cluster.id
   task_definition = aws_ecs_task_definition.simple-web-app.arn
-  desired_count   = 2
+  desired_count   = 1
   launch_type     = "FARGATE"
   
   network_configuration {

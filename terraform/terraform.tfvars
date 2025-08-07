@@ -1,0 +1,9 @@
+azs = [ "ap-southeast-1a", "ap-southeast-1b" ]
+cidr = "10.0.0.0/16"
+name = "d-vpc-01"
+private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+public_subnets = [ "10.0.101.0/24", "10.0.102.0/24" ]
+ami = "ami-015927f8ee1bc0293"
+instance_type = "t3.micro"
+allowed_ssh_cidr = "171.252.155.223/32"
+domain_name = "cloud-sangnguyen.click"
