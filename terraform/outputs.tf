@@ -8,12 +8,12 @@ output "domain_name" {
   value       = var.domain_name
 }
 
-output "name_servers" {
-  description = "Name servers for the hosted zone (if created)"
-  value       = var.domain_name != null ? module.route53.name_servers : null
-}
-
 output "certificate_arn" {
   description = "ARN of the SSL certificate (if created)"
   value       = var.domain_name != null ? module.acm[0].certificate_arn : null
+}
+
+output "name_servers" {
+  description = "Name servers for the hosted zone (if created)"
+  value       = var.domain_name != null ? module.route53[0].name_servers : null
 }

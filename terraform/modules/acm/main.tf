@@ -23,7 +23,7 @@ resource "aws_acm_certificate_validation" "ssl_cert_validation" {
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
   
   timeouts {
-    create = "10m"
+    create = "15m"
   }
   
   lifecycle {

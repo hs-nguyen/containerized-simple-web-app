@@ -3,8 +3,8 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "subnet_id" {
-  description = "Subnet ID for ALB placement"
+variable "subnet_ids" {
+  description = "Subnet IDs for ALB placement"
   type        = list(string)
 }
 
@@ -15,15 +15,11 @@ variable "public_subnets" {
 
 variable "alb_sg_id" {
   description = "Security group ID for the ALB"
-}
-
-variable "target_group_arn" {
-  description = "ARN of the target group"
   type        = string
 }
 
-variable "certificate_arn" {
-  description = "ARN of the SSL certificate"
+variable "environment" {
+  description = "Environment name"
   type        = string
-  default     = null
+  default     = "dev"
 }

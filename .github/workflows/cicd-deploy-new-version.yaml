@@ -1,0 +1,61 @@
+﻿"on": 
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+        default: 'latest'
+env:
+  AWS-REGION: ap-southeast-1
+  name: Build and Push Docker Image
+  ECR-REPOSITORY: simple-web-app
+  ECR-REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
+  SERVICE-NAME: simple-web-app-service
+  TASK-DEFINITION: simple-web-app-task
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-region: ${{ env.AWS-REGION }}
+
+      - name: Logign to Amazon ECR
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        run: |
+          echo "Logging in to Amazon ECR..."
+          aws ecr get-login-password --region ${{ env.AWS-REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ECR-REGISTRY }}
+          echo "Building Docker image..."
+          docker build -t ${{ env.ECR-REPOSITORY }}:latest .
+      - name: Tag Docker image
+        run: |
+          echo "Tagging Docker image..."
+          docker tag ${{ env.ECR-REPOSITORY }}:latest ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          echo "Pushing Docker image to ECR..."
+          docker push ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest  
+      - name: Success
+        run: echo "Docker image built and pushed successfully!"
+      - name: Update Task Definition
+        run: |
+          echo "Updating ECS Task Definition..."
+          aws ecs update-service --cluster ${{ env.SERVICE-NAME }} --service ${{ env.SERVICE-NAME }} --force-new-deployment
+          echo "ECS Task Definition updated successfully!"
+
+      - name: Notify Deployment Success
+        run: echo "Deployment to ECS completed successfully!"

@@ -92,7 +92,7 @@ resource "aws_security_group" "ecs-cluster-sg" {
         to_port     = 80
         protocol    = "tcp"
         security_groups = [aws_security_group.alb-sg.id]
-        description = "Allow HTTPS traffic from ALB"
+        description = "Allow HTTP traffic from ALB"
     }
     egress {
         from_port   = 0

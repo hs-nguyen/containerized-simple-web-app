@@ -19,3 +19,9 @@ variable "name" {
   type        = string
   default     = "d-vpc-01"
 }
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "dev"
+}
