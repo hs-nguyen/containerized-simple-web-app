@@ -1,4 +1,4 @@
-﻿"on": 
+﻿"on":
   push:
     branches:
       - main
@@ -15,6 +15,7 @@ env:
   ECR-REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
   SERVICE-NAME: simple-web-app-service
   TASK-DEFINITION: simple-web-app-task
+  path: web/
   
 jobs:
   build:
@@ -34,12 +35,13 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Build Docker image
+        id: build-image
         run: |
           echo "Logging in to Amazon ECR..."
           aws ecr get-login-password --region ${{ env.AWS-REGION }} | \
           docker login --username AWS --password-stdin ${{ env.ECR-REGISTRY }}
           echo "Building Docker image..."
-          docker build -t ${{ env.ECR-REPOSITORY }}:latest .
+          docker build -t ${{ env.ECR-REPOSITORY }}:latest ${{ env.path }}
       - name: Tag Docker image
         run: |
           echo "Tagging Docker image..."
