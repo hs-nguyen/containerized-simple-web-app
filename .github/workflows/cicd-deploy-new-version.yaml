@@ -61,10 +61,9 @@ jobs:
         run: |
           echo "Creating or updating ECS task definition..."
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.TASK-DEFINITION }} || echo "{}")
-          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest" \
+          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "FULL_IMAGE" \
             '.taskDefinition | 
             .containerDefinitions[0].image = $IMAGE | 
-            .family = ${{ env.TASK-DEFINITION }} | 
             del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
           echo $NEW_TASK_DEFINITION | jq '.taskDefinition.revision'
           aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION"
