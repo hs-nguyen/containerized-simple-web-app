@@ -14,6 +14,7 @@ env:
   ECR-REPOSITORY: simple-web-app
   ECR-REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
   SERVICE-NAME: simple-web-app-service
+  cluster: simple-web-app-cluster
   TASK-DEFINITION: simple-web-app-task
   path: web/
   
@@ -53,11 +54,18 @@ jobs:
           docker push ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest  
       - name: Success
         run: echo "Docker image built and pushed successfully!"
-      - name: Update Task Definition
+      - name: Create or update ECS task definition
         run: |
-          echo "Updating ECS Task Definition..."
-          aws ecs update-service --cluster ${{ env.SERVICE-NAME }} --service ${{ env.SERVICE-NAME }} --force-new-deployment
-          echo "ECS Task Definition updated successfully!"
+          echo "Creating or updating ECS task definition..."
+          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.TASK-DEFINITION }} || echo "{}")
+          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest" \
+            '.taskDefinition | .containerDefinitions[0].image = $IMAGE | .family = ${{ env.TASK-DEFINITION }} | del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
+          echo $NEW_TASK_DEFINITION | jq '.' > task-definition.json
+          aws ecs register-task-definition --cli-input-json file://task-definition.json
+      - name: Update ECS Service
+        run: |
+          echo "Updating ECS service..."
+          aws ecs update-service --cluster ${{ env.cluster }} --service ${{ env.SERVICE-NAME }} --force-new-deployment
 
       - name: Notify Deployment Success
         run: echo "Deployment to ECS completed successfully!"
