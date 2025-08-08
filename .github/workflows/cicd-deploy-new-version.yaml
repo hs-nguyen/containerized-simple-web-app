@@ -1,4 +1,6 @@
-﻿on:
+name: Deploy New Version
+
+on:
   push:
     branches:
       - main
@@ -10,70 +12,55 @@
         default: 'latest'
 
 env:
-  AWS-REGION: ap-southeast-1
-  ECR-REPOSITORY: simple-web-app
-  ECR-REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
-  SERVICE-NAME: simple-web-app-service
-  cluster: simple-web-app-cluster
-  TASK-DEFINITION: simple-web-app-task
-  path: web/
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: simple-web-app
+  ECR_REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
+  SERVICE_NAME: simple-web-app-service
+  CLUSTER_NAME: simple-web-app-cluster
+  TASK_DEFINITION: simple-web-app-task
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
-          aws-region: ${{ env.AWS-REGION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Logign to Amazon ECR
-        uses: docker/setup-buildx-action@v1
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       - name: Build Docker image
-        id: build-image
         run: |
-          echo "Logging in to Amazon ECR..."
-          aws ecr get-login-password --region ${{ env.AWS-REGION }} | \
-          docker login --username AWS --password-stdin ${{ env.ECR-REGISTRY }}
-          echo "Building Docker image..."
-          docker build -t ${{ env.ECR-REPOSITORY }}:latest ${{ env.path }}
-
-      - name: Tag Docker image
-        run: |
-          echo "Tagging Docker image..."
-          docker tag ${{ env.ECR-REPOSITORY }}:latest ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest
+          docker build -t ${{ env.ECR_REPOSITORY }}:latest web/
+          docker tag ${{ env.ECR_REPOSITORY }}:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
       - name: Push Docker image to ECR
         run: |
-          echo "Pushing Docker image to ECR..."
-          docker push ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
-      - name: Success
-        run: echo "Docker image built and pushed successfully!"
-
-      - name: Create or update ECS task definition
+      - name: Update ECS task definition
         run: |
-          echo "Creating or updating ECS task definition..."
-          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.TASK-DEFINITION }} || echo "{}")
-          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "FULL_IMAGE" \
-            '.taskDefinition | 
-            .containerDefinitions[0].image = $IMAGE | 
-            del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
-          echo $NEW_TASK_DEFINITION | jq '.taskDefinition.revision'
-          aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION"
+          TASK_DEF=$(aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION }} --query 'taskDefinition')
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest" \
+            '.containerDefinitions[0].image = $IMAGE | del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+          echo $NEW_TASK_DEF > task-definition.json
+          aws ecs register-task-definition --cli-input-json file://task-definition.json
 
-      - name: Update ECS Service  
+      - name: Update ECS service
         run: |
-          echo "Updating ECS service..."
-          aws ecs update-service --cluster ${{ env.cluster }} --service ${{ env.SERVICE-NAME }} --force-new-deployment
+          aws ecs update-service \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --service ${{ env.SERVICE_NAME }} \
+            --force-new-deployment
 
-      - name: Notify Deployment Success
-        run: echo "Deployment to ECS completed successfully!"
-      - name: Notify Deployment Success
-        run: echo "Deployment to ECS completed successfully!"
+      - name: Deployment complete
+        run: echo "Deployment completed successfully!"
