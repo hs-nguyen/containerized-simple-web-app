@@ -49,7 +49,7 @@ const resetForm = () => {
 
 <template>
   <div class="crud-container">
-    <h2 class="welcome-text"> CI/CD With Github Actions</h2>
+    <h2 class="welcome-text"> CI/CD With Github Actions v1.0</h2>
     <div class="blog-links">
       <a href="https://hs-nguyen.hashnode.dev/" target="_blank">Visit my Hashnode Blog</a>
       <a href="https://www.linkedin.com/in/nguyen-huu-sang/" target="_blank">Linkedin Profile</a>
