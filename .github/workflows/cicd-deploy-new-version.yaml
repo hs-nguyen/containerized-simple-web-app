@@ -1,4 +1,4 @@
-﻿"on":
+﻿on:
   push:
     branches:
       - main
@@ -8,16 +8,16 @@
         description: 'Version'
         required: true
         default: 'latest'
+
 env:
   AWS-REGION: ap-southeast-1
-  name: Build and Push Docker Image
   ECR-REPOSITORY: simple-web-app
   ECR-REGISTRY: 891377055161.dkr.ecr.ap-southeast-1.amazonaws.com
   SERVICE-NAME: simple-web-app-service
   cluster: simple-web-app-cluster
   TASK-DEFINITION: simple-web-app-task
   path: web/
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,6 +43,7 @@ jobs:
           docker login --username AWS --password-stdin ${{ env.ECR-REGISTRY }}
           echo "Building Docker image..."
           docker build -t ${{ env.ECR-REPOSITORY }}:latest ${{ env.path }}
+
       - name: Tag Docker image
         run: |
           echo "Tagging Docker image..."
@@ -51,21 +52,29 @@ jobs:
       - name: Push Docker image to ECR
         run: |
           echo "Pushing Docker image to ECR..."
-          docker push ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest  
+          docker push ${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest
+
       - name: Success
         run: echo "Docker image built and pushed successfully!"
+
       - name: Create or update ECS task definition
         run: |
           echo "Creating or updating ECS task definition..."
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.TASK-DEFINITION }} || echo "{}")
           NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.ECR-REGISTRY }}/${{ env.ECR-REPOSITORY }}:latest" \
-            '.taskDefinition | .containerDefinitions[0].image = $IMAGE | .family = ${{ env.TASK-DEFINITION }} | del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
+            '.taskDefinition | 
+            .containerDefinitions[0].image = $IMAGE | 
+            .family = ${{ env.TASK-DEFINITION }} | 
+            del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
           echo $NEW_TASK_DEFINITION | jq '.' > task-definition.json
           aws ecs register-task-definition --cli-input-json file://task-definition.json
-      - name: Update ECS Service
+
+      - name: Update ECS Service  
         run: |
           echo "Updating ECS service..."
           aws ecs update-service --cluster ${{ env.cluster }} --service ${{ env.SERVICE-NAME }} --force-new-deployment
 
+      - name: Notify Deployment Success
+        run: echo "Deployment to ECS completed successfully!"
       - name: Notify Deployment Success
         run: echo "Deployment to ECS completed successfully!"
