@@ -66,8 +66,8 @@ jobs:
             .containerDefinitions[0].image = $IMAGE | 
             .family = ${{ env.TASK-DEFINITION }} | 
             del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities)')
-          echo $NEW_TASK_DEFINITION | jq '.' > task-definition.json
-          aws ecs register-task-definition --cli-input-json file://task-definition.json
+          echo $NEW_TASK_DEFINITION | jq '.taskDefinition.revision'
+          aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION"
 
       - name: Update ECS Service  
         run: |
